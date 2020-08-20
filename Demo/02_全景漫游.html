@@ -11,8 +11,8 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>全景漫游</title>
-    <link rel="stylesheet" href="./Cesium/Widgets/widgets.css" />
-    <script src="./Cesium/Cesium.js"></script>
+    <link rel="stylesheet" href="../Cesium/Widgets/widgets.css" />
+    <script src="../Cesium/Cesium.js"></script>
     <style>
       html,
       body,
@@ -59,10 +59,10 @@
   <body>
     <div class="toolbox">
       <button id="zoomIn" class="tool-item">
-        <img class="tool-image" src="./SampleData/zoomIn.png" alt="" />
+        <img class="tool-image" src="../SampleData/zoomIn.png" alt="" />
       </button>
       <button id="zoomOut" class="tool-item">
-        <img class="tool-image" src="./SampleData/zoomOut.png" alt="" />
+        <img class="tool-image" src="../SampleData/zoomOut.png" alt="" />
       </button>
     </div>
     <div id="infobox"></div>
@@ -216,7 +216,7 @@
         //Automatically compute orientation based on position movement.
         orientation: new Cesium.VelocityOrientationProperty(position),
         model: {
-          uri: './SampleData/models/CesiumAir/Cesium_Air.glb',
+          uri: '../SampleData/models/CesiumAir/Cesium_Air.glb',
           minimumPixelSize: 64,
         },
         //Show the path as a pink line sampled in 1 second increments.

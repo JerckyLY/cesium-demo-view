@@ -11,8 +11,8 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>图文标注</title>
-    <link rel="stylesheet" href="./Cesium/Widgets/widgets.css" />
-    <script src="./Cesium/Cesium.js"></script>
+    <link rel="stylesheet" href="../Cesium/Widgets/widgets.css" />
+    <script src="../Cesium/Cesium.js"></script>
     <style>
       html,
       body,
@@ -49,14 +49,14 @@
     </style>
   </head>
   <body>
-    <img id="img" style="display: none;" src="SampleData/cover.jpg" alt="" />
+    <img id="img" style="display: none;" src="../SampleData/cover.jpg" alt="" />
     <div id="infobox"></div>
     <div class="toolbox">
       <button id="zoomIn" class="tool-item">
-        <img class="tool-image" src="./SampleData/zoomIn.png" alt="" />
+        <img class="tool-image" src="../SampleData/zoomIn.png" alt="" />
       </button>
       <button id="zoomOut" class="tool-item">
-        <img class="tool-image" src="./SampleData/zoomOut.png" alt="" />
+        <img class="tool-image" src="../SampleData/zoomOut.png" alt="" />
       </button>
     </div>
     <div id="cesiumContainer"></div>
@@ -101,7 +101,7 @@
       position: Cesium.Cartesian3.fromDegrees(-75.61, 40.043, 100),
       billboard: {
         image: drawCanvas(
-          'SampleData/cover.jpg',
+          '../SampleData/cover.jpg',
           'Hello World 你好 Cesium!',
           2
         ),
