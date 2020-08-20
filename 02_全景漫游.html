@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>全景漫游</title>
+    <link rel="stylesheet" href="./Cesium/Widgets/widgets.css" />
+    <script src="./Cesium/Cesium.js"></script>
+    <style>
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #infobox {
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        font-size: 14px;
+        z-index: 99;
+        padding: 10px 20px;
+        background-color: white;
+        border: 1px solid #cccccc;
+      }
+      .toolbox {
+        position: absolute;
+        top: 49%;
+        left: 30px;
+        z-index: 99;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+      }
+      .tool-item {
+        background-color: #303336;
+        cursor: pointer;
+      }
+      .playbox {
+        position: absolute;
+        top: 30px;
+        left: 49%;
+        z-index: 99;
+        display: flex;
+        justify-content: space-around;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbox">
+      <button id="zoomIn" class="tool-item">
+        <img class="tool-image" src="./SampleData/zoomIn.png" alt="" />
+      </button>
+      <button id="zoomOut" class="tool-item">
+        <img class="tool-image" src="./SampleData/zoomOut.png" alt="" />
+      </button>
+    </div>
+    <div id="infobox"></div>
+    <div class="playbox">
+      <button id="start">播放</button>
+      <button id="quit">停止</button>
+    </div>
+    <div id="cesiumContainer"></div>
+  </body>
+  <script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+      imageryProvider: new Cesium.UrlTemplateImageryProvider({
+        url: 'http://mt1.google.cn/maps/vt?lyrs=s&x={x}&y={y}&z={z}',
+        credit: '',
+        tilingScheme: new Cesium.WebMercatorTilingScheme(),
+      }),
+      shouldAnimate: true,
+      timeline: true,
+      animation: false,
+    });
+    viewer._cesiumWidget._creditContainer.style.display = 'none'; // 隐藏版权
+    viewer.scene.globe.show = true;
+    viewer.scene.debugShowFramesPerSecond = true;
+
+    // var tilesets = new Cesium.Cesium3DTileset({
+    //   url: './SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json',
+    //   skipLevelOfDetail: true,
+    //   maximumMemoryUsage: 1500,
+    //   maximumScreenSpaceError: 16,
+    //   // cullRequestsWhileMovingMultiplier: 100,
+    //   dynamicScreenSpaceError: false,
+    //   preferLeaves: true,
+    //   debugShowContentBoundingVolume: false,
+    //   debugShowViewerRequestVolume: false,
+    //   debugShowBoundingVolume: false,
+    // });
+    // tilesets.readyPromise
+    //   .then(function (tileset) {
+    //     viewer.scene.primitives.add(tileset);
+    //     viewer.flyTo(tileset);
+    //   })
+    //   .otherwise(function (error) {
+    //     console.log(error);
+    //   });
+    var myPositions = [
+      [109.05832893717263, 37.441496598851096],
+      [109.05855416786699, 37.44130123438769],
+      [109.05870506545179, 37.44117238850958],
+      [109.05846290755761, 37.441001906200626],
+      [109.05874862898264, 37.440730473795476],
+      [109.0591362027828, 37.4403901883947],
+      [109.05955264270231, 37.4400282830198],
+      [109.05976466627452, 37.43986533373868],
+      [109.06019447304337, 37.43953151809137],
+      [109.06050060518912, 37.439282109667204],
+      [109.06073920090172, 37.43909640541291],
+      [109.06102095626935, 37.43887990938909],
+      [109.06126114614219, 37.43905268010351],
+      [109.0615923854886, 37.43932891714282],
+      [109.06114978051788, 37.43970657237644],
+      [109.06078572833964, 37.44000168113979],
+      [109.06027780474928, 37.44042583498669],
+      [109.0598968978716, 37.440729305287476],
+      [109.05936770987917, 37.441168572826626],
+      [109.05904603542216, 37.44142781800953],
+      [109.0587449465546, 37.44119249116668],
+      [109.05845600554856, 37.441396645980845],
+    ];
+    // var point = viewer.entities.add({
+    //   position: Cesium.Cartesian3.fromDegrees(
+    //     109.05845600554856,
+    //     37.441396645980845,
+    //     100
+    //   ),
+    //   point: {
+    //     show: false,
+    //   },
+    // });
+
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        109.05845600554856,
+        37.441396645980845,
+        400.0
+      ),
+    });
+    console.log(viewer.animation);
+    function trackView() {
+      //Set bounds of our simulation time
+      var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+      var stop = Cesium.JulianDate.addSeconds(
+        start,
+        myPositions.length - 1,
+        new Cesium.JulianDate()
+      );
+
+      //Make sure viewer is at the desired time.
+      viewer.clock.startTime = start.clone();
+      viewer.clock.stopTime = stop.clone();
+      viewer.clock.currentTime = start.clone();
+      viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+      viewer.clock.multiplier = 0.3;
+
+      //Set timeline to simulation bounds
+      viewer.timeline.zoomTo(start, stop);
+
+      //Generate a random circular pattern with varying heights.
+      function computeCirclularFlight() {
+        var property = new Cesium.SampledPositionProperty();
+        //设置插入选项
+        property.setInterpolationOptions({
+          // interpolationDegree: 1,
+          // interpolationAlgorithm: Cesium.LinearApproximation,
+
+          // interpolationDegree: 5,
+          // interpolationAlgorithm:
+          //   Cesium.LagrangePolynomialApproximation,
+
+          interpolationDegree: 2,
+          interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+        });
+        for (var i = 0; i < myPositions.length; i++) {
+          var time = Cesium.JulianDate.addSeconds(
+            start,
+            i,
+            new Cesium.JulianDate()
+          );
+          var position = Cesium.Cartesian3.fromDegrees(
+            myPositions[i][0],
+            myPositions[i][1],
+            5
+          );
+          property.addSample(time, position);
+        }
+        return property;
+      }
+
+      var position = computeCirclularFlight();
+
+      //Actually create the entity
+      var entity = viewer.entities.add({
+        //Set the entity availability to the same interval as the simulation time.
+        availability: new Cesium.TimeIntervalCollection([
+          new Cesium.TimeInterval({
+            start: start,
+            stop: stop,
+          }),
+        ]),
+        //Use our computed positions
+        position: position,
+        //Automatically compute orientation based on position movement.
+        orientation: new Cesium.VelocityOrientationProperty(position),
+        model: {
+          uri: './SampleData/models/CesiumAir/Cesium_Air.glb',
+          minimumPixelSize: 64,
+        },
+        //Show the path as a pink line sampled in 1 second increments.
+        path: {
+          resolution: 1,
+          material: new Cesium.PolylineGlowMaterialProperty({
+            glowPower: 0.1,
+            color: Cesium.Color.GREEN,
+          }),
+          width: 16,
+        },
+      });
+      viewer.trackedEntity = entity;
+    }
+
+    //视角变换
+    var matrix3Scratch = new Cesium.Matrix3();
+    function getModelMatrix(entity, time, result) {
+      var position = Cesium.Property.getValueOrUndefined(
+        entity.position,
+        time,
+        new Cesium.Cartesian3()
+      );
+      if (!Cesium.defined(position)) {
+        return undefined;
+      }
+      var orientation = Cesium.Property.getValueOrUndefined(
+        entity.orientation,
+        time,
+        new Cesium.Quaternion()
+      );
+      if (!Cesium.defined(orientation)) {
+        result = Cesium.Transforms.eastNorthUpToFixedFrame(
+          position,
+          undefined,
+          result
+        );
+      } else {
+        result = Cesium.Matrix4.fromRotationTranslation(
+          Cesium.Matrix3.fromQuaternion(orientation, matrix3Scratch),
+          position,
+          result
+        );
+      }
+      return result;
+    }
+    var scratch = new Cesium.Matrix4();
+    var renderListener = function (e) {
+      //viewer.camera.positionCartographic.height = 2000 + $this.limitCamera(f_property);
+      if (viewer.trackedEntity) {
+        getModelMatrix(viewer.trackedEntity, viewer.clock.currentTime, scratch);
+
+        var transformX = 90; //距离运动点的距离（后方）
+        var transformZ = 55; //距离运动点的高度（上方）
+        var transformY = 0; //距离运动点的高度（侧方）
+        viewer.scene.camera.lookAtTransform(
+          scratch,
+          new Cesium.Cartesian3(-transformX, transformY, transformZ)
+        );
+      }
+    };
+    viewer.scene.preRender.addEventListener(renderListener);
+
+    document.getElementById('start').onclick = function () {
+      viewer.clock.shouldAnimate = true;
+      trackView();
+    };
+
+    document.getElementById('quit').onclick = function () {
+      viewer.trackedEntity = undefined;
+      viewer.clock.shouldAnimate = false;
+    };
+
+    // 放大缩小
+    document.getElementById('zoomIn').onclick = function () {
+      // 获取当前镜头位置的笛卡尔坐标
+      let cameraPos = viewer.camera.position;
+      // 获取当前坐标系标准
+      let ellipsoid = viewer.scene.globe.ellipsoid;
+
+      // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+      let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+      // 获取镜头的高度
+      let height = cartographic.height;
+      // if (height < 40) {
+      //   return
+      // }
+      // 镜头拉近
+      viewer.camera.zoomIn(height / 3);
+    };
+
+    document.getElementById('zoomOut').onclick = function () {
+      // 获取当前镜头位置的笛卡尔坐标
+      let cameraPos = viewer.camera.position;
+      // 获取当前坐标系标准
+      let ellipsoid = viewer.scene.globe.ellipsoid;
+
+      // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+      let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+      // 获取镜头的高度
+      let height = cartographic.height;
+      // if (height < 40) {
+      //   return
+      // }
+      // 镜头拉近
+      viewer.camera.zoomOut(height * 1.2);
+    };
+    //经纬度显示
+    viewer.screenSpaceEventHandler.setInputAction(function (event) {
+      var earthPosition = viewer.camera.pickEllipsoid(
+        event.position,
+        viewer.scene.globe.ellipsoid
+      );
+      var cartographic = Cesium.Cartographic.fromCartesian(
+        earthPosition,
+        viewer.scene.globe.ellipsoid,
+        new Cesium.Cartographic()
+      );
+      var lat = Cesium.Math.toDegrees(cartographic.latitude);
+      var lng = Cesium.Math.toDegrees(cartographic.longitude);
+      var height = viewer.camera.positionCartographic.height;
+      document.getElementById('infobox').innerHTML =
+        '<span>经度：' +
+        lng.toFixed(3) +
+        '</span>' +
+        '<span>  纬度：' +
+        lat.toFixed(3) +
+        '</span>' +
+        '<span>  相机高度：' +
+        height +
+        '</span>';
+      console.log(lat, lng, height);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  </script>
+</html>
