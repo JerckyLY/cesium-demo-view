@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>自定义帧率显示</title>
+    <link rel="stylesheet" href="../Cesium/Widgets/widgets.css" />
+    <script src="../Cesium/Cesium.js"></script>
+    <!--    <script  src="./Utils/CesiumPopup.js"></script>-->
+    <!-- <script src="./Utils/CesiumInterView.js"></script> -->
+    <script  src="../Utils/CesiumFPSUtil.js"></script>
+
+<!--    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>-->
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #infobox {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 14px;
+            z-index: 99;
+            padding: 10px 20px;
+            background-color: white;
+            border: 1px solid #cccccc;
+        }
+        .toolbox {
+            position: absolute;
+            top: 49%;
+            left: 30px;
+            z-index: 99;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .tool-item {
+            background-color: #303336;
+            cursor: pointer;
+        }
+
+
+        /* pop框css*/
+        .cesium-popup-panel {
+            opacity: 0.8;
+            width: 312px;
+            position: absolute;
+            z-index: 999;
+            color: #00fcf9;
+
+            background: rgba(23, 50, 108, 0.6);
+            border: 1px solid #4674d6;
+        }
+        .cesium-popup-tip-panel {
+            width: 40px;
+            height: 20px;
+            position: absolute;
+            left: 50%;
+            bottom: -20px;
+            margin-left: -20px;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .cesium-popup-tip-bottom {
+            width: 17px;
+            background: rgba(23, 50, 108, 0.8);
+            border-bottom: 1px solid #4674d6;
+            height: 17px;
+            padding: 1px;
+            margin: -10px auto 0;
+            -webkit-transform: rotate(45deg);
+            -moz-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+        .cesium-popup-header-panel {
+            /* display: flex; */
+            /* justify-content: space-between; */
+            align-items: center;
+            font-size: 14px;
+            padding: 5px 15px;
+            background: rgba(23, 50, 108, 0.8);
+
+            border-bottom: 1px solid #4674d6;
+        }
+
+        .cesium-poput-header-title {
+            font-size: 16px;
+            font-family: Microsoft YaHei;
+            font-weight: 400;
+            color: #ffffff;
+        }
+
+        .cesium-popup-content-panel {
+            padding: 18px;
+        }
+        .cesium-popup-close-btn{
+            float: right;
+            position: relative;
+            right: 10px;
+        }
+        .cesium-popup-close-btn,
+        .cesium-popup-close-btn:focus {
+            cursor: pointer;
+        }
+        cesium-popup-close-btn > svg:hover {
+            color: #00fcf9 !important;
+        }
+        .cesium-popup-close-btn > svg {
+            user-select: auto;
+            color: #4674d6;
+            cursor: pointer;
+            width: 15px;
+            /* height: 15px; */
+        }
+        
+        #fpsdiv{
+            position: absolute;
+            top: 20px;
+            left: 40%;
+            font-size: 14px;
+            min-width: 200px;
+            z-index: 99;
+            padding: 10px 20px;
+            color:white;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .info-content{
+            display: flex;
+            justify-content: space-around;
+        }
+
+
+    </style>
+</head>
+<body>
+<div id="infobox"></div>
+<div id="fpsdiv"></div>
+
+<div class="toolbox">
+    <!--      <input type="color">-->
+    <button id="zoomIn" class="tool-item">
+        <img class="tool-image" src="../SampleData/zoomIn.png" alt="" />
+    </button>
+    <button id="zoomOut" class="tool-item">
+        <img class="tool-image" src="../SampleData/zoomOut.png" alt="" />
+    </button>
+
+    <!-- <button id='angel' style="color: white;" class="tool-item">开始</button>
+
+    <button id='clear' style="color: white;" class="tool-item">清除</button> -->
+
+</div>
+<div id="cesiumContainer"></div>
+</body>
+<script >
+
+    // import CesiumAngelUtil from '../Utils/CesiumAngelUtil'
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+            url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+            // url:
+            //   "https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}",
+        }),
+        shouldAnimate: true,
+        timeline: false,
+        animation: false,
+        shadow:false
+    });
+    viewer._cesiumWidget._creditContainer.style.display = 'none'; // 隐藏版权
+    viewer.scene.globe.show = true;
+    viewer.scene.debugShowFramesPerSecond = true;
+
+    var tilesets = new Cesium.Cesium3DTileset({
+        url: '../SampleData/end3d/tileset.json',
+        skipLevelOfDetail: true,
+        maximumMemoryUsage: 1500,
+        maximumScreenSpaceError: 16,
+        // cullRequestsWhileMovingMultiplier: 100,
+        dynamicScreenSpaceError: false,
+        preferLeaves: true,
+        debugShowContentBoundingVolume: false,
+        debugShowViewerRequestVolume: false,
+        debugShowBoundingVolume: false,
+    });
+    tilesets.readyPromise
+        .then(function (tileset) {
+            viewer.scene.primitives.add(tileset);
+            viewer.flyTo(tileset);
+        })
+        .otherwise(function (error) {
+            console.log(error);
+        });
+
+
+    //帧率显示
+    const fpsInfo = new CesiumFPSUtil('fpsdiv')
+    var fpsPostEvent = function (){
+        fpsInfo.update()
+    }
+    viewer.scene.postRender.addEventListener(fpsPostEvent)
+
+    // 放大缩小
+    document.getElementById('zoomIn').onclick = function () {
+        // 获取当前镜头位置的笛卡尔坐标
+        let cameraPos = viewer.camera.position;
+        // 获取当前坐标系标准
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+
+        // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+        let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+        // 获取镜头的高度
+        let height = cartographic.height;
+        // if (height < 40) {
+        //   return
+        // }
+        // 镜头拉近
+        viewer.camera.zoomIn(height / 3);
+    };
+
+    document.getElementById('zoomOut').onclick = function () {
+        // 获取当前镜头位置的笛卡尔坐标
+        let cameraPos = viewer.camera.position;
+        // 获取当前坐标系标准
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+
+        // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+        let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+        // 获取镜头的高度
+        let height = cartographic.height;
+        // if (height < 40) {
+        //   return
+        // }
+        // 镜头拉近
+        viewer.camera.zoomOut(height * 1.2);
+    };
+    //经纬度显示
+    viewer.screenSpaceEventHandler.setInputAction(function (event) {
+        var earthPosition = viewer.camera.pickEllipsoid(
+            event.position,
+            viewer.scene.globe.ellipsoid
+        );
+        var cartographic = Cesium.Cartographic.fromCartesian(
+            earthPosition,
+            viewer.scene.globe.ellipsoid,
+            new Cesium.Cartographic()
+        );
+        var lat = Cesium.Math.toDegrees(cartographic.latitude);
+        var lng = Cesium.Math.toDegrees(cartographic.longitude);
+        var height = viewer.camera.positionCartographic.height;
+        document.getElementById('infobox').innerHTML =
+            '<span>经度：' +
+            lng.toFixed(3) +
+            '</span>' +
+            '<span>  纬度：' +
+            lat.toFixed(3) +
+            '</span>' +
+            '<span>  相机高度：' +
+            height +
+            '</span>';
+        // console.log(lat, lng, height);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+</script>
+</html>
