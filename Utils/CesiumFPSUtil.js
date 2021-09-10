@@ -37,7 +37,6 @@ class CesiumFPSUtil {
     this._msText = document.createElement("span");
     fpsDiv.append(this._fpsText);
     fpsDiv.append(this._msText);
-
     parent.append(fpsDiv);
   }
 
