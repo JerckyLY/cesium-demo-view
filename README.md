@@ -1,5 +1,3 @@
-# cesium-demo-view
-持续更新Cesium的相关示例 （Cesium V1.70） 
 # 目前文章
  1. 基于广告牌的 图文标注 <a href='https://jercky.top/2020/07/21/Cesium%E5%85%A5%E9%97%A8-2/' target="_blank" >博客地址</a>  
  2. 第一视角全局漫游 <a href='https://jercky.top/2020/08/19/Cesium%E5%85%A5%E9%97%A8-3/' target="_blank" >博客地址</a>   
